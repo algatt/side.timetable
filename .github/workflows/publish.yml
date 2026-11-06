@@ -1,0 +1,95 @@
+name: Refresh and publish timetable
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * *'
+      timezone: Europe/Malta
+
+# A newer run must not interrupt an import or overlap its history commit.
+concurrency:
+  group: timetable-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pages: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Include history commits made by an earlier queued refresh.
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          npm --prefix frontend ci
+      - name: Discover and download current PDF
+        run: python -m backend.download
+      - name: Extract and validate every page
+        run: python -m backend.extract_timetable
+      - name: Check parser and room calculations
+        run: |
+          python -m unittest discover -s tests -v
+          npm --prefix frontend test
+      - name: Build static website
+        run: npm --prefix frontend run build
+      - name: Verify complete publication
+        run: node frontend/scripts/check-publication.mjs
+      - name: Preserve validated import history
+        run: |
+          git add data/history
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Record validated timetable import'
+            git push origin HEAD:main
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: frontend/dist
+      - name: Save failed import diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-import-${{ github.run_id }}
+          path: |
+            data/source/metadata.json
+            data/processed/validation.json
+            data/processed/review.html
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified website
+        id: deployment
+        uses: actions/deploy-pages@v4

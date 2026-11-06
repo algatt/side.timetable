@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+!.env.example
+data/source/*
+!data/source/.gitkeep
+data/sample/
+data/processed/
+data/history/*.tmp
+tmp/
+frontend/node_modules/
+frontend/dist/
+frontend/public/data/
+*.tsbuildinfo
