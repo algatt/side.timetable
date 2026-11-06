@@ -121,7 +121,7 @@ This processes every page and produces a comparison report with a **group/activi
 - `data/processed/lessons.csv`: all timetable entries, including general activities, with their type and source page.
 - `data/processed/review.html`: the self-contained verification report.
 
-The current source (SHA-256 `736f4378e3bb736b9d03781e540fadf7995b4467eef7cb7a260c6809d9c6fa93`) produces **69 pages, 69 group/activity labels, 733 lessons, 11 general activities, 117 subject records and 51 rooms**. Its 44 source warnings comprise 6 placeholder-code occurrences, 27 blocks without a subject code, and 11 blocks without a recognized printed room. These counts describe the current file rather than requirements for future timetables.
+The current source (SHA-256 `736f4378e3bb736b9d03781e540fadf7995b4467eef7cb7a260c6809d9c6fa93`) produces **69 pages, 69 group/activity labels, 733 lessons, 11 general activities, 109 subject records and 51 rooms**. Its 44 source warnings comprise 6 placeholder-code occurrences, 27 blocks without a subject code, and 11 blocks without a recognized printed room. These counts describe the current file rather than requirements for future timetables.
 
 ### Rules for incomplete source data
 
@@ -130,6 +130,7 @@ The current source (SHA-256 `736f4378e3bb736b9d03781e540fadf7995b4467eef7cb7a260
 - Room labels currently support both `ICT-...` and `IBMC-...`.
 - Meetings and Student Support are retained as activities. Missing rooms remain unassigned; no room is guessed. Parallel activity blocks within one weekday are captured separately.
 - Original group labels stay separate, including `IT-ADS-6.3A` and `IT-ADS-6.3A-2`. They can be linked explicitly later if appropriate.
+- A group-only annotation before a subject code (for example `IT-CYB-6.2A, Erasmus Group 1`) is recorded in `shared_groups`, separately from the unit name `Maths for Cybersecurity`. The timetable page still determines the entry's group. This does not create extra entries or alter bookings; original text is retained. Unrecognized text before a code stays in the name rather than being discarded.
 - All listed rooms in a multi-room block are occupied for its entire interval. Each block remains one group lesson. Occupied room minutes use the union of intervals so coincident bookings are counted once.
 - Matching subject/time bookings in the same room are reported as coincident pairs, which may represent shared teaching. They remain separate group entries. Other overlaps are reported as potential room conflicts. The current PDF has 16 coincident pairs and no potential room conflicts under this check.
 
@@ -242,6 +243,29 @@ The viewer now includes these tools:
 - **Alternative rooms** is available on occupied room cards under **Find a room → Show occupied rooms**. Candidates must be free for the full interval and match the source room's known type, minimum seating/student PCs, OS and positively listed equipment, as well as explicit search filters. Missing source details add no constraint; unknown candidate details cannot satisfy a known requirement. Specialist facilities/software require manual checking.
 
 All availability and usage calculations remain ICT-only, use all timetable groups and reserve every listed room in a multi-room block. Inventory-only rooms have unconfirmed availability and are excluded. Ad hoc bookings and entries without a printed room cannot be inferred.
+
+### Statistics by unit and group
+
+**Statistics** provides searchable, sortable **By unit / By group** tables for
+lesson counts, weekly lesson hours, scheduled days and group/unit counts.
+**View groups** expands a unit into group totals; **View units** expands a group
+into unit totals. The grouping is retained in `tool=stats&stats_by=group` (or
+`unit`). Weekday boxes are purple for scheduled days and pale otherwise, with
+full day names and status available to assistive technology and in tooltips.
+
+Only lesson entries contribute. Multi-room lessons count once per group; shared
+sessions and overlapping lesson entries remain separate group blocks. Hours sum
+the weekly pattern, rather than lecturer contact time or whole-unit delivery.
+Complete codes combine printed-name variants, with all original names retained
+in the unit breakdown. Missing or placeholder codes use code plus name to keep
+unrelated units separate. Different complete codes remain distinct even when
+their names match.
+
+The current PDF yields **108 units, 65 groups with lessons and 1,036 weekly
+lesson hours across groups**. IT-FIT-2.1A has **10 units, 17 lessons and 20 weekly
+hours**. Its multi-room Computer Systems block contributes 1.5 hours, giving
+Computer Systems 2.5 hours for that group. Activities such as meetings are
+excluded. Automated checks reconcile both views against all lesson entries.
 
 ### Import history and daily updates
 

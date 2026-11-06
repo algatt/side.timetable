@@ -9,3 +9,4 @@ createApp(App).mount('#app')
 import './features.css'
 
 import './theme.css'
+import './statistics.css'

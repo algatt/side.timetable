@@ -22,6 +22,7 @@ function backdrop(event: MouseEvent) { if (event.target === dialog.value) close(
     <span class="subject-chip" :class="`tone-${subjectTone(entry)}`">{{ entry.subject_code || 'No code printed' }}</span>
     <h2 id="lesson-title">{{ entry.subject_name }}</h2>
     <p class="dialog-group">{{ entry.group }}</p>
+    <p v-if="entry.shared_groups && entry.shared_groups.length>1" class="dialog-shared-groups"><AppIcon name="seats" :size="15" /><span>Shared groups: {{ entry.shared_groups.join(' · ') }}</span></p>
     <dl class="lesson-facts">
       <div><dt><AppIcon name="calendar" /> Day</dt><dd>{{ entry.weekday }}</dd></div>
       <div><dt><AppIcon name="clock" /> Time</dt><dd>{{ entry.start }} – {{ entry.end }} <small>Malta time</small></dd></div>

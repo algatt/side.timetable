@@ -107,7 +107,7 @@ class FullDownloadedPdfTests(unittest.TestCase):
         self.assertEqual(len(warnings), 44)
         self.assertEqual(sum(e["entry_kind"] == "lesson" for e in entries), 733)
         groups, subjects, rooms = build_catalogs(entries)
-        self.assertEqual((len(groups), len(subjects), len(rooms)), (69, 117, 51))
+        self.assertEqual((len(groups), len(subjects), len(rooms)), (69, 109, 51))
         self.assertEqual(room_validation(entries)[1], [])
 
     def test_parallel_student_support_blocks_are_both_retained(self):
@@ -118,6 +118,20 @@ class FullDownloadedPdfTests(unittest.TestCase):
         self.assertEqual([(entry["start"], entry["end"]) for entry in wednesday],
                          [("08:00", "10:00"), ("09:00", "11:00")])
         self.assertTrue(all(e["entry_kind"] == "activity" and e["rooms"] == [] for e in wednesday))
+
+    def test_shared_group_labels_are_metadata_not_unit_names(self):
+        expected_groups = ["IT-CYB-6.2A", "Erasmus Group 1"]
+        for page_number, group in [(52, "IT-CYB-6.2A"), (64, "Erasmus Group 1")]:
+            lessons = [lesson for lesson in self.pages[page_number - 1]["lessons"]
+                       if lesson["subject_code"] == "ITMTH-506-2303"]
+            self.assertEqual(len(lessons), 2)
+            self.assertTrue(all(lesson["group"] == group for lesson in lessons))
+            self.assertTrue(all(lesson["subject_name"] == "Maths for Cybersecurity" for lesson in lessons))
+            self.assertTrue(all(lesson["shared_groups"] == expected_groups for lesson in lessons))
+            self.assertEqual([(lesson["weekday"], lesson["start"], lesson["end"], lesson["rooms"]) for lesson in lessons],
+                             [("Monday", "09:00", "10:30", ["ICT-238"]),
+                              ("Tuesday", "10:30", "12:00", ["ICT-300"])])
+            self.assertTrue(all("IT-CYB-6.2A, Erasmus Group 1" in lesson["raw_text"] for lesson in lessons))
 
     def test_missing_source_fields_are_not_fabricated(self):
         lesson = next(e for e in self.pages[19]["lessons"] if e["subject_name"] == "Advanced Digital Marketing")

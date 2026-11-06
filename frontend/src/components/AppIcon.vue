@@ -11,6 +11,7 @@ const paths: Record<string, string> = {
   tv: 'M5 7h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2 M8 2l4 5 4-5',
   projector: 'M4 7h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2 M18 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0 M6 11h2 M6 15h2 M6 19v2 M18 19v2',
   chart: 'M4 3v18h17 M8 17v-5 M13 17V7 M18 17V4',
+  statistics: 'M12 3v9h9 M8 3.5A9 9 0 1 0 20.5 16 M16 3.5a9 9 0 0 1 4.5 4.5',
   changes: 'M4 7h15 M15 3l4 4-4 4 M20 17H5 M9 13l-4 4 4 4',
   clock: 'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   room: 'M4 21h16 M6 21V3h12v18 M14 12h.01',

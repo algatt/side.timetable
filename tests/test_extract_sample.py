@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pdfplumber
 
-from backend.extract_sample import LayoutError, nearest_boundary, parse_page, parse_subject
+from backend.extract_sample import LayoutError, nearest_boundary, parse_page, parse_subject, printed_groups
 
 
 SOURCE = Path(__file__).resolve().parents[1] / "data/source/timetable.pdf"
@@ -21,6 +21,24 @@ class SubjectTests(unittest.TestCase):
     def test_wrapped_name_with_no_separator_after_code(self):
         self.assertEqual(parse_subject("ITMMD-406-2004\nIntroduction to Object\nOriented Programming\nICT-B05"),
                          ("ITMMD-406-2004", "Introduction to Object Oriented Programming", ["ICT-B05"]))
+
+    def test_shared_group_annotation_is_separate_from_unit_name(self):
+        raw = "IT-CYB-6.2A, Erasmus Group 1\nITMTH-506-2303-Maths for Cybersecurity\nICT-238"
+        self.assertEqual(parse_subject(raw), ("ITMTH-506-2303", "Maths for Cybersecurity", ["ICT-238"]))
+        self.assertEqual(printed_groups(raw), ["IT-CYB-6.2A", "Erasmus Group 1"])
+
+    def test_wrapped_shared_groups_and_continuation_groups_are_preserved(self):
+        raw = "IT-ADS-6.3A-2,\nErasmus Group 1\nITIMG-606-1601 - Image Processing and\nComputer Vision\nICT-104\nICT-105"
+        self.assertEqual(parse_subject(raw), ("ITIMG-606-1601", "Image Processing and Computer Vision", ["ICT-104", "ICT-105"]))
+        self.assertEqual(printed_groups(raw), ["IT-ADS-6.3A-2", "Erasmus Group 1"])
+
+    def test_non_group_text_before_a_code_is_not_discarded(self):
+        for prefix in ["Advanced", "IT-CYB-6.2A, Unknown programme"]:
+            raw = f"{prefix}\nITMTH-506-2303-Maths for Cybersecurity\nICT-238"
+            self.assertEqual(printed_groups(raw), [])
+            self.assertIn(prefix, parse_subject(raw)[1])
+        self.assertEqual(printed_groups("IT-CYB-6.2A, Erasmus Group 1"), [])
+        self.assertEqual(parse_subject("CDKSK-503-2328-English for Academic Purposes\nICT-103")[1], "English for Academic Purposes")
 
     def test_ambiguous_subjects_fail_instead_of_merging(self):
         with self.assertRaises(LayoutError):

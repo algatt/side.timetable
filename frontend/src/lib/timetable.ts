@@ -6,6 +6,7 @@ export type Weekday = typeof WEEKDAYS[number]
 export interface Entry {
   id: string
   group: string
+  shared_groups?: string[]
   weekday: Weekday
   start: string
   end: string
@@ -73,6 +74,11 @@ export function assertDataset(value: unknown): asserts value is Dataset {
   }
   const ids = new Set<string>()
   for (const entry of data.entries) {
+    if (entry.shared_groups !== undefined && (!Array.isArray(entry.shared_groups) ||
+        !entry.shared_groups.every(group => typeof group === 'string' && group.trim().length > 0) ||
+        new Set(entry.shared_groups).size !== entry.shared_groups.length)) {
+      throw new Error(`Invalid shared groups for timetable entry: ${entry.id || 'unknown'}.`)
+    }
     if (typeof entry.id !== 'string' || ids.has(entry.id) || !groupIds.has(entry.group) ||
         !WEEKDAYS.includes(entry.weekday) || typeof entry.subject_name !== 'string' || !entry.subject_name.trim() ||
         !['lesson', 'activity'].includes(entry.entry_kind) || !['complete', 'placeholder', 'missing'].includes(entry.code_status) ||

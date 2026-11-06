@@ -11,7 +11,8 @@ import LabDirectory from './components/LabDirectory.vue'
 import LiveRooms from './components/LiveRooms.vue'
 import RoomUsage from './components/RoomUsage.vue'
 import ChangesView from './components/ChangesView.vue'
-const extraTools = [{id:'now',label:'Free now',icon:'clock'},{id:'usage',label:'Room usage',icon:'chart'},{id:'changes',label:'Changes',icon:'changes'}] as const
+import TimetableStatistics from './components/TimetableStatistics.vue'
+const extraTools = [{id:'now',label:'Free now',icon:'clock'},{id:'usage',label:'Room usage',icon:'chart'},{id:'stats',label:'Statistics',icon:'statistics'},{id:'changes',label:'Changes',icon:'changes'}] as const
 
 import { WEEKDAYS, assertDataset, entriesForGroup, entriesForRoom, scheduleRooms, entryLabel, hasSourceNote, sourceUrl, subjectTone } from './lib/timetable'
 import type { Dataset, Entry } from './lib/timetable'
@@ -24,7 +25,7 @@ const query = ref('')
 const groupId = ref('')
 const roomId = ref('ICT-126')
 const scheduleScope = ref<'group' | 'room'>('group')
-const tool = ref<'timetable' | 'rooms' | 'labs' | 'now' | 'usage' | 'changes'>('timetable')
+const tool = ref<'timetable' | 'rooms' | 'labs' | 'now' | 'usage' | 'stats' | 'changes'>('timetable')
 const mobileTools = computed(() => [
   {id:'timetable',label:'Timetables',icon:'calendar'},
   {id:'rooms',label:'Find a room',icon:'room'},
@@ -61,7 +62,7 @@ function restoreGroup() {
   scheduleScope.value = params.get('by') === 'room' ? 'room' : 'group'
   const requestedRoom = params.get('schedule_room')
   if (data.value && requestedRoom && scheduleRooms(data.value).includes(requestedRoom)) roomId.value = requestedRoom
-  const requestedTool=params.get('tool'); tool.value = ['rooms','labs','now','usage','changes'].includes(requestedTool ?? '') ? requestedTool as typeof tool.value : 'timetable'
+  const requestedTool=params.get('tool'); tool.value = ['rooms','labs','now','usage','stats','changes'].includes(requestedTool ?? '') ? requestedTool as typeof tool.value : 'timetable'
 }
 function selectGroup(id: string) { if (scheduleScope.value === 'room') roomId.value = id; else groupId.value = id; tool.value = 'timetable' }
 function changeScope(value: 'group' | 'room') { scheduleScope.value = value; query.value = '' }
@@ -125,6 +126,7 @@ onBeforeUnmount(() => { controller?.abort(); window.removeEventListener('popstat
         <LabDirectory v-else-if="tool === 'labs'" :data="data" />
         <LiveRooms v-else-if="tool === 'now'" :data="data" />
         <RoomUsage v-else-if="tool === 'usage'" :data="data" />
+        <TimetableStatistics v-else-if="tool === 'stats'" :data="data" />
         <ChangesView v-else-if="tool === 'changes'" :data="data" />
         <template v-else>
         <ScheduleScope class="mobile-scope" :model-value="scheduleScope" @update:model-value="changeScope" /><div class="mobile-group-picker"><label for="mobile-group">{{ scheduleScope === 'room' ? 'Room' : 'Group or activity' }}</label><select id="mobile-group" v-model="scheduleId"><option v-for="group in scheduleOptions" :key="group.id" :value="group.id">{{ group.label }}</option></select></div>

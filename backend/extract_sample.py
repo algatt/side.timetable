@@ -18,6 +18,7 @@ from backend.sample_report import write_report
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 SUBJECT = re.compile(r"\b([A-Z]{4,8})\s*-\s*(\d{3})\s*-\s*(\d{4}|\d{2}[xX]{2})\b")
 ROOM = re.compile(r"\b(?:ICT|IBMC)\s*-\s*[A-Z]?\d{2,3}\b", re.IGNORECASE)
+GROUP_LABEL = re.compile(r"(?:IT-[A-Z]{2,8}-\d+\.\d+[A-Z](?:-\d+)?|Erasmus Group \d+)")
 TIME_ROW = re.compile(r"^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})$")
 DEFAULT_PAGES = (1, 2, 4, 41, 51)
 DEFAULT_SAMPLE = DEFAULT_OUTPUT.parent / "sample"
@@ -43,13 +44,30 @@ def clock(value):
     return f"{value // 60:02d}:{value % 60:02d}"
 
 
+def printed_groups(raw_text):
+    """Recognize a complete group-only annotation before the subject code.
+
+    Text before a code is not automatically disposable: every comma-separated
+    label must match the group grammar, otherwise preserve it as subject text.
+    """
+    match = SUBJECT.search(raw_text)
+    if not match:
+        return []
+    prefix = " ".join(raw_text[:match.start()].split()).strip(" -–:")
+    labels = [label.strip() for label in prefix.split(",")]
+    if not labels or not all(GROUP_LABEL.fullmatch(label) for label in labels):
+        return []
+    return list(dict.fromkeys(labels))
+
+
 def parse_subject(raw_text):
     matches = list(SUBJECT.finditer(raw_text))
     if len(matches) > 1:
         raise LayoutError(f"Expected at most one subject code in a block, found {len(matches)}.")
     code = "-".join(matches[0].groups()) if matches else None
     rooms = list(dict.fromkeys(re.sub(r"\s", "", m.group()).upper() for m in ROOM.finditer(raw_text)))
-    without_rooms = ROOM.sub("", raw_text)
+    subject_text = raw_text[matches[0].start():] if printed_groups(raw_text) else raw_text
+    without_rooms = ROOM.sub("", subject_text)
     name = SUBJECT.sub("", without_rooms, count=1)
     name = " ".join(name.split()).strip(" -–:")
     if not name:
@@ -131,6 +149,7 @@ def parse_page(page):
             lesson.update(start=clock(start), end=clock(end), duration_minutes=end - start)
             code, name, rooms = parse_subject(cell["text"])
             lesson.update(subject_code=code, subject_name=name, rooms=rooms,
+                          shared_groups=printed_groups(cell["text"]),
                           entry_kind="lesson" if code or rooms else "activity",
                           code_status="missing" if code is None else "placeholder" if "x" in code.lower() else "complete")
             if code is None:

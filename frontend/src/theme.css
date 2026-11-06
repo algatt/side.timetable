@@ -72,6 +72,7 @@ input::placeholder{color:#716a7e;opacity:1}
 .live-room-table .secondary-button{font-size:11px;padding:7px 10px;white-space:nowrap}.live-room-table .compact-lab-info{margin:0;padding:0;border:0}.live-equipment-title{font-size:12px;margin:0 0 12px;color:var(--navy)}
 .sortable-heading>button{display:inline-flex;align-items:center;gap:7px;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:4px 0;text-align:inherit;white-space:nowrap}.sortable-heading>button>span{font-size:13px;color:#8b819e}.sortable-heading>button>span.active{color:var(--brand-purple)}.sortable-heading>button:hover{color:var(--brand-purple)}.sortable-heading>button:focus-visible{outline:2px solid var(--brand-purple);outline-offset:4px;border-radius:2px}.sortable-heading[aria-sort=ascending],.sortable-heading[aria-sort=descending]{color:#5145c7}
 .mobile-tool-picker{display:none}
+.dialog-shared-groups{display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 22px}.dialog-shared-groups>svg{flex-shrink:0}
 @media(max-width:760px){
   .topbar{flex-wrap:nowrap;align-items:center;min-height:76px;gap:10px;padding-top:14px;padding-bottom:14px}
   .topbar .workspace-navigation{display:none}

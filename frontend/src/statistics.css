@@ -1,0 +1,43 @@
+.statistics-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.statistics-heading .view-switch{flex-shrink:0}
+.statistics-heading .view-switch button{min-height:40px}
+.statistics-metrics strong{font-variant-numeric:tabular-nums;letter-spacing:-.7px}
+.statistics-metrics strong small{font-size:16px;font-weight:500;margin-left:5px;letter-spacing:0}
+.statistics-policy{max-width:920px;line-height:1.8;margin:0 0 26px}
+.statistics-search-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.statistics-search-row>span{font-size:12px;color:var(--muted);white-space:nowrap}
+.statistics-search{margin:0;width:340px;max-width:100%;height:44px;background:#fff}
+.statistics-search input{min-width:0;width:100%}
+.statistics-table-wrap{position:relative}
+.statistics-table th,.statistics-table td{vertical-align:middle}
+.scheduled-days{display:flex;align-items:center;gap:4px;width:max-content}
+.scheduled-day{display:flex;align-items:center;justify-content:center;width:29px;height:29px;border:1px solid #e2dfeb;border-radius:5px;background:#f6f5fa;color:#7b748a;font-size:9px;font-weight:550;line-height:1;flex-shrink:0}
+.scheduled-day.is-scheduled{background:var(--brand-purple);border-color:var(--brand-purple);color:#fff}
+.statistics-table .statistics-unit-name{min-width:180px;max-width:330px;white-space:normal}
+.statistics-code{white-space:nowrap;font-variant-numeric:tabular-nums}
+.statistics-table .statistics-hours{color:#5145c7;font-weight:650}
+.statistics-details-button{gap:7px;white-space:nowrap;font-size:11px;padding:8px 10px;min-height:36px}
+.statistics-details-button svg{transition:transform .15s ease}
+.statistics-details-button[aria-expanded=true] svg{transform:rotate(90deg)}
+.statistics-table .statistics-detail-cell{padding:22px 24px 26px}
+.statistics-detail-cell h2{font-size:14px;font-weight:600;margin:0 0 16px;color:var(--navy)}
+.statistics-name-note{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 16px;max-width:740px}
+.statistics-breakdown{border-collapse:collapse;width:100%;font-size:12px;line-height:1.6;background:white;border:1px solid var(--border)}
+.statistics-table .statistics-breakdown th,.statistics-table .statistics-breakdown td{padding:12px 14px}
+.statistics-table .statistics-breakdown thead th{background:#f0eff8}
+.statistics-breakdown td:last-child{white-space:nowrap}
+.statistics-empty{margin:24px 0;padding:28px;background:white;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px}
+.statistics-empty .text-button{margin-left:12px}
+@media(max-width:760px){
+  .statistics-heading{gap:12px}
+  .statistics-heading .view-switch button{min-height:44px}
+  .statistics-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .statistics-metrics>div{padding:18px}
+  .statistics-metrics>div:last-child{grid-column:1/-1}
+  .statistics-metrics strong{font-size:27px}
+  .statistics-search-row{gap:10px}
+  .statistics-search{flex:1;min-width:0;width:auto}
+  .statistics-table{min-width:740px}
+  .statistics-table .statistics-detail-cell{padding:18px 14px}
+}
+@media(prefers-reduced-motion:reduce){.statistics-details-button svg{transition:none}}
