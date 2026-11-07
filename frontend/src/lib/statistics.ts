@@ -1,10 +1,12 @@
 import type { Entry, Weekday } from './timetable.ts'
 import { WEEKDAYS } from './timetable.ts'
 
+export interface DailyLessonHours { day: Weekday; minutes: number }
 export interface LessonStatistics {
   lessons: number
   minutes: number
   days: Weekday[]
+  byDay: DailyLessonHours[]
 }
 export interface UnitStatistics extends LessonStatistics {
   id: string
@@ -42,6 +44,7 @@ export function timetableStatistics(entries: readonly Entry[]) {
       lessons: items.length,
       minutes: items.reduce((sum, entry) => sum + entry.duration_minutes, 0),
       days: WEEKDAYS.filter(day => items.some(entry => entry.weekday === day)),
+      byDay: WEEKDAYS.map(day => ({ day, minutes: items.filter(entry => entry.weekday === day).reduce((sum, entry) => sum + entry.duration_minutes, 0) })),
     }
   }
   const units: UnitStatistics[] = [...unitEntries].map(([id, items]) => {
@@ -61,3 +64,9 @@ export function timetableStatistics(entries: readonly Entry[]) {
 }
 
 export const lessonHours = (minutes: number): string => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(minutes / 60)
+
+// One scale per table, rounded up to whole hours; filtering and sorting do not
+// change the main table's scale or make short days look like full days.
+export function dailyHoursScale(rows: readonly LessonStatistics[]): number {
+  return Math.max(60, Math.ceil(Math.max(0, ...rows.flatMap(row => row.byDay.map(day => day.minutes))) / 60) * 60)
+}

@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
-import { timetableStatistics, unitIdentity } from '../src/lib/statistics.ts'
+import { dailyHoursScale, timetableStatistics, unitIdentity } from '../src/lib/statistics.ts'
+import { WEEKDAYS } from '../src/lib/timetable.ts'
 
 const entry = (overrides = {}) => ({
   id: 'a', group: 'G1', entry_kind: 'lesson', weekday: 'Friday',
@@ -60,7 +61,26 @@ test('activities are excluded without losing named lessons that have no printed 
   assert.equal(stats.lessons, 1)
   assert.equal(stats.excludedActivities, 1)
   assert.deepEqual(stats.groups.map(group => group.id), ['G1'])
-  assert.deepEqual(timetableStatistics([]), { units: [], groups: [], lessons: 0, minutes: 0, days: [], excludedActivities: 0 })
+  assert.deepEqual(timetableStatistics([]), { units: [], groups: [], lessons: 0, minutes: 0, days: [], byDay: WEEKDAYS.map(day => ({ day, minutes: 0 })), excludedActivities: 0 })
+})
+
+test('daily hours add lesson durations once per group and use a common rounded scale', () => {
+  const stats = timetableStatistics([
+    entry({ weekday: 'Monday' }),
+    entry({ id: 'b', weekday: 'Monday', duration_minutes: 30 }),
+    entry({ id: 'c', group: 'G2', weekday: 'Monday', duration_minutes: 45 }),
+    entry({ id: 'd', weekday: 'Saturday', duration_minutes: 15 }),
+    entry({ id: 'e', entry_kind: 'activity', weekday: 'Tuesday', duration_minutes: 180 }),
+  ])
+  assert.equal(stats.byDay.find(item => item.day === 'Monday').minutes, 165)
+  assert.equal(stats.byDay.find(item => item.day === 'Tuesday').minutes, 0)
+  assert.equal(stats.byDay.find(item => item.day === 'Saturday').minutes, 15)
+  assert.equal(stats.groups.find(group => group.id === 'G1').byDay[0].minutes, 120)
+  assert.equal(stats.groups.find(group => group.id === 'G2').byDay[0].minutes, 45)
+  assert.equal(dailyHoursScale(stats.groups), 120)
+  assert.equal(dailyHoursScale(stats.units), 180)
+  assert.equal(dailyHoursScale([]), 60)
+  assert.equal(stats.byDay.reduce((sum, day) => sum + day.minutes, 0), stats.minutes)
 })
 
 test('group and unit totals reconcile, including overlapping lesson blocks', () => {
@@ -84,6 +104,9 @@ test('complete published dataset reconciles across both views and FIT retains it
   assert.equal(stats.minutes, lessons.reduce((sum, entry) => sum + entry.duration_minutes, 0))
   assert.equal(stats.units.reduce((sum, unit) => sum + unit.minutes, 0), stats.minutes)
   assert.equal(stats.groups.reduce((sum, group) => sum + group.minutes, 0), stats.minutes)
+  for (const row of [stats, ...stats.units, ...stats.groups]) {
+    assert.equal(row.byDay.reduce((sum, day) => sum + day.minutes, 0), row.minutes)
+  }
   if (data.source.sha256 === '736f4378e3bb736b9d03781e540fadf7995b4467eef7cb7a260c6809d9c6fa93') {
     const fit = stats.groups.find(group => group.id === 'IT-FIT-2.1A')
     assert.equal(fit.minutes, 1200)

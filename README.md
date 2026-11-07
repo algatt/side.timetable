@@ -250,8 +250,10 @@ All availability and usage calculations remain ICT-only, use all timetable group
 lesson counts, weekly lesson hours, scheduled days and group/unit counts.
 **View groups** expands a unit into group totals; **View units** expands a group
 into unit totals. The grouping is retained in `tool=stats&stats_by=group` (or
-`unit`). Weekday boxes are purple for scheduled days and pale otherwise, with
-full day names and status available to assistive technology and in tooltips.
+`unit`). Weekday columns vary in height with scheduled lesson hours. Main rows
+share a scale across the full unit/group view, unaffected by search or sorting;
+each expanded breakdown has its own shared scale. Hover for exact hours, also
+available to assistive technology. Days without lessons have no filled column.
 
 Only lesson entries contribute. Multi-room lessons count once per group; shared
 sessions and overlapping lesson entries remain separate group blocks. Hours sum

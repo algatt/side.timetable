@@ -10,9 +10,11 @@
 .statistics-search input{min-width:0;width:100%}
 .statistics-table-wrap{position:relative}
 .statistics-table th,.statistics-table td{vertical-align:middle}
-.scheduled-days{display:flex;align-items:center;gap:4px;width:max-content}
-.scheduled-day{display:flex;align-items:center;justify-content:center;width:29px;height:29px;border:1px solid #e2dfeb;border-radius:5px;background:#f6f5fa;color:#7b748a;font-size:9px;font-weight:550;line-height:1;flex-shrink:0}
-.scheduled-day.is-scheduled{background:var(--brand-purple);border-color:var(--brand-purple);color:#fff}
+.scheduled-days{display:flex;align-items:flex-end;gap:5px;width:max-content}
+.scheduled-day{width:27px;flex-shrink:0;text-align:center}
+.scheduled-day-track{height:44px;display:flex;align-items:flex-end;background:#f4f2fa;border-bottom:1px solid #ded9ef;border-radius:3px 3px 0 0;overflow:hidden}
+.scheduled-day-track>span{display:block;width:100%;background:#9990df;border-radius:3px 3px 0 0}
+.scheduled-day-label{display:block;margin-top:6px;color:var(--muted);font-size:9px;line-height:1.3;font-weight:500}
 .statistics-table .statistics-unit-name{min-width:180px;max-width:330px;white-space:normal}
 .statistics-code{white-space:nowrap;font-variant-numeric:tabular-nums}
 .statistics-table .statistics-hours{color:#5145c7;font-weight:650}

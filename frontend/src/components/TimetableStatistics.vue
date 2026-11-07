@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { Dataset } from '../lib/timetable'
-import { lessonHours, timetableStatistics, unitIdentity } from '../lib/statistics'
+import { dailyHoursScale, lessonHours, timetableStatistics, unitIdentity } from '../lib/statistics'
 import type { GroupStatistics, UnitStatistics } from '../lib/statistics'
 import { sortRows } from '../lib/tableSort'
 import { useTableSort } from '../lib/useTableSort'
@@ -28,6 +28,8 @@ const detail = computed(() => {
 })
 const detailUnits = computed(() => sortRows(detail.value.units, row => row.minutes, 'desc', row => `${row.code ?? ''} ${row.name}`))
 const detailGroups = computed(() => sortRows(detail.value.groups, row => row.minutes, 'desc', row => row.id))
+const chartScale = computed(() => dailyHoursScale(view.value === 'unit' ? statistics.value.units : statistics.value.groups))
+const detailChartScale = computed(() => dailyHoursScale(view.value === 'unit' ? detail.value.groups : detail.value.units))
 
 function sortValue(row: UnitStatistics | GroupStatistics) {
   switch (sorting.key.value) {
@@ -35,7 +37,6 @@ function sortValue(row: UnitStatistics | GroupStatistics) {
     case 'code': return 'code' in row ? row.code : null
     case 'count': return 'groups' in row ? row.groups.length : row.units
     case 'lessons': return row.lessons
-    case 'days': return row.days.length
     default: return row.minutes
   }
 }
@@ -79,19 +80,19 @@ watch(query, () => { expanded.value = null })
           <SortHeader :label="view==='unit'?'Groups':'Units'" column="count" :sort-key="sorting.key.value" :direction="sorting.direction.value" numeric @sort="sorting.toggle" />
           <SortHeader label="Lessons" column="lessons" :sort-key="sorting.key.value" :direction="sorting.direction.value" numeric @sort="sorting.toggle" />
           <SortHeader label="Weekly hours" column="hours" :sort-key="sorting.key.value" :direction="sorting.direction.value" numeric @sort="sorting.toggle" />
-          <SortHeader label="Scheduled days" column="days" :sort-key="sorting.key.value" :direction="sorting.direction.value" @sort="sorting.toggle" />
+          <th scope="col" :title="`Columns share a 0–${lessonHours(chartScale)} hour scale within this table.`">By day</th>
           <th scope="col"><span class="sr-only">Details</span></th>
         </tr></thead>
         <tbody v-if="view==='unit'">
           <template v-for="row in units" :key="row.id">
-            <tr><th scope="row" class="statistics-unit-name">{{ row.name }}</th><td class="statistics-code">{{ row.code ?? 'Not printed' }}<small v-if="row.codeStatus==='placeholder'">Placeholder code</small></td><td class="numeric">{{ row.groups.length }}</td><td class="numeric">{{ row.lessons }}</td><td class="numeric statistics-hours">{{ lessonHours(row.minutes) }}</td><td><ScheduledDays :days="row.days" /></td><td><button type="button" class="secondary-button statistics-details-button" :aria-expanded="expanded===row.id" :aria-label="`Groups for ${row.name}, ${row.code ?? 'no code printed'}`" @click="toggle(row.id)">{{ expanded===row.id?'Hide groups':'View groups' }}<AppIcon name="chevron" :size="14" /></button></td></tr>
-            <tr v-if="expanded===row.id" class="expanded-room"><td colspan="7" class="statistics-detail-cell"><h2>{{ row.name }} · by group</h2><p v-if="row.names.length>1" class="statistics-name-note">Also printed as: {{ row.names.slice(1).join('; ') }}</p><table class="statistics-breakdown"><caption class="sr-only">{{ row.name }} group breakdown</caption><thead><tr><th scope="col">Group</th><th scope="col" class="numeric">Lessons</th><th scope="col" class="numeric">Weekly hours</th><th scope="col">Scheduled days</th></tr></thead><tbody><tr v-for="group in detailGroups" :key="group.id"><th scope="row">{{ group.id }}</th><td class="numeric">{{ group.lessons }}</td><td class="numeric">{{ lessonHours(group.minutes) }}</td><td><ScheduledDays :days="group.days" /></td></tr></tbody></table></td></tr>
+            <tr><th scope="row" class="statistics-unit-name">{{ row.name }}</th><td class="statistics-code">{{ row.code ?? 'Not printed' }}<small v-if="row.codeStatus==='placeholder'">Placeholder code</small></td><td class="numeric">{{ row.groups.length }}</td><td class="numeric">{{ row.lessons }}</td><td class="numeric statistics-hours">{{ lessonHours(row.minutes) }}</td><td><ScheduledDays :by-day="row.byDay" :max-minutes="chartScale" /></td><td><button type="button" class="secondary-button statistics-details-button" :aria-expanded="expanded===row.id" :aria-label="`Groups for ${row.name}, ${row.code ?? 'no code printed'}`" @click="toggle(row.id)">{{ expanded===row.id?'Hide groups':'View groups' }}<AppIcon name="chevron" :size="14" /></button></td></tr>
+            <tr v-if="expanded===row.id" class="expanded-room"><td colspan="7" class="statistics-detail-cell"><h2>{{ row.name }} · by group</h2><p v-if="row.names.length>1" class="statistics-name-note">Also printed as: {{ row.names.slice(1).join('; ') }}</p><table class="statistics-breakdown"><caption class="sr-only">{{ row.name }} group breakdown</caption><thead><tr><th scope="col">Group</th><th scope="col" class="numeric">Lessons</th><th scope="col" class="numeric">Weekly hours</th><th scope="col" :title="`Columns share a 0–${lessonHours(detailChartScale)} hour scale within this table.`">By day</th></tr></thead><tbody><tr v-for="group in detailGroups" :key="group.id"><th scope="row">{{ group.id }}</th><td class="numeric">{{ group.lessons }}</td><td class="numeric">{{ lessonHours(group.minutes) }}</td><td><ScheduledDays :by-day="group.byDay" :max-minutes="detailChartScale" /></td></tr></tbody></table></td></tr>
           </template>
         </tbody>
         <tbody v-else>
           <template v-for="row in groups" :key="row.id">
-            <tr><th scope="row">{{ row.id }}</th><td class="numeric">{{ row.units }}</td><td class="numeric">{{ row.lessons }}</td><td class="numeric statistics-hours">{{ lessonHours(row.minutes) }}</td><td><ScheduledDays :days="row.days" /></td><td><button type="button" class="secondary-button statistics-details-button" :aria-expanded="expanded===row.id" :aria-label="`Units for ${row.id}`" @click="toggle(row.id)">{{ expanded===row.id?'Hide units':'View units' }}<AppIcon name="chevron" :size="14" /></button></td></tr>
-            <tr v-if="expanded===row.id" class="expanded-room"><td colspan="6" class="statistics-detail-cell"><h2>{{ row.id }} · by unit</h2><table class="statistics-breakdown"><caption class="sr-only">{{ row.id }} unit breakdown</caption><thead><tr><th scope="col">Unit</th><th scope="col">Unit code</th><th scope="col" class="numeric">Lessons</th><th scope="col" class="numeric">Weekly hours</th><th scope="col">Scheduled days</th></tr></thead><tbody><tr v-for="unit in detailUnits" :key="unit.id"><th scope="row" class="statistics-unit-name">{{ unit.name }}</th><td>{{ unit.code ?? 'Not printed' }}<small v-if="unit.codeStatus==='placeholder'">Placeholder code</small></td><td class="numeric">{{ unit.lessons }}</td><td class="numeric">{{ lessonHours(unit.minutes) }}</td><td><ScheduledDays :days="unit.days" /></td></tr></tbody></table></td></tr>
+            <tr><th scope="row">{{ row.id }}</th><td class="numeric">{{ row.units }}</td><td class="numeric">{{ row.lessons }}</td><td class="numeric statistics-hours">{{ lessonHours(row.minutes) }}</td><td><ScheduledDays :by-day="row.byDay" :max-minutes="chartScale" /></td><td><button type="button" class="secondary-button statistics-details-button" :aria-expanded="expanded===row.id" :aria-label="`Units for ${row.id}`" @click="toggle(row.id)">{{ expanded===row.id?'Hide units':'View units' }}<AppIcon name="chevron" :size="14" /></button></td></tr>
+            <tr v-if="expanded===row.id" class="expanded-room"><td colspan="6" class="statistics-detail-cell"><h2>{{ row.id }} · by unit</h2><table class="statistics-breakdown"><caption class="sr-only">{{ row.id }} unit breakdown</caption><thead><tr><th scope="col">Unit</th><th scope="col">Unit code</th><th scope="col" class="numeric">Lessons</th><th scope="col" class="numeric">Weekly hours</th><th scope="col" :title="`Columns share a 0–${lessonHours(detailChartScale)} hour scale within this table.`">By day</th></tr></thead><tbody><tr v-for="unit in detailUnits" :key="unit.id"><th scope="row" class="statistics-unit-name">{{ unit.name }}</th><td>{{ unit.code ?? 'Not printed' }}<small v-if="unit.codeStatus==='placeholder'">Placeholder code</small></td><td class="numeric">{{ unit.lessons }}</td><td class="numeric">{{ lessonHours(unit.minutes) }}</td><td><ScheduledDays :by-day="unit.byDay" :max-minutes="detailChartScale" /></td></tr></tbody></table></td></tr>
           </template>
         </tbody>
       </table>
